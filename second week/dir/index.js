@@ -46,35 +46,35 @@ function rmdirWideSeries(d, cb){
         }) 
     }
 }
-rmdirWideSeries('a', () => {
+rmdirWideSeries('a',() => {
     console.log('删除成功！！')
 });
+
+
 // 深度 优先 async await
-// fs = require('mz/fs');
-// async function rmdirSeries(d, cb) {
-//     try{
-//         let currentPath = path.join(__dirname, d);
-//         let statObj = await fs.stat(currentPath);
-//         if (statObj.isDirectory()) {
-//             let dirs = await fs.readdir(currentPath);
-//             async function next(index) {
-//                 if (index === dirs.length) {
-//                     await fs.rmdir(currentPath);
-//                     return cb();
-//                 };
-//                 rmdirSeries(path.join(d, dirs[index]), () => next(++index))
-//             }
-//             next(0);
-//         } else {
-//            await fs.unlink(currentPath);
-//            cb();
-//         }
-//     }catch(e){
-//         console.log('err ', e)
-//     }
-// }
-// rmdirSeries('a', () => {
-//     console.log('删除成功！');
-// })
-
-
+fs = require('mz/fs');
+async function rmdirSeries(d, cb) {
+    try{
+        let currentPath = path.join(__dirname, d);
+        let statObj = await fs.stat(currentPath);
+        if (statObj.isDirectory()) {
+            let dirs = await fs.readdir(currentPath);
+            async function next(index) {
+                if (index === dirs.length) {
+                    await fs.rmdir(currentPath);
+                    return cb();
+                };
+                rmdirSeries(path.join(d, dirs[index]), () => next(++index))
+            }
+            next(0);
+        } else {
+           await fs.unlink(currentPath);
+           cb();
+        }
+    }catch(e){
+        console.log('err ', e)
+    }
+}
+rmdirSeries('a', () => {
+    console.log('删除成功！');
+})
