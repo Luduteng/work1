@@ -11,25 +11,33 @@ function Module(id) {
 Module._cache = Object.create(null);
 Module._extension = Object.create(null);
 Module.wrapper = ["(function(exports, require, module, __dirname, __filename){", "})"];
-
+// Module._pathCache[cacheKey]
 Module._load = function(id) { // 判断缓存中有没有 没有创建模块 尝试加载
-    let cacheModule = Module._cache[id]
+    let filename = Module._resolveFilename(id);
+    let cacheModule = Module._cache[filename];
     if(cacheModule) {
         console.log('cacheModule.exports')
         return cacheModule.exports;
     } 
-    let module = new Module(id);
-    Module._cache[id] = module;
-    tryModuleLoad(module, id);
+    let module = new Module(filename);
+    Module._cache[filename] = module;
+    tryModuleLoad(module, filename);
     return module.exports
 }
-Module._extension['.json'] = function(module, filename) {
-    let content = fs.readFileSync(filename, 'utf8');
-    module.exports = JSON.parse(content);
+Module._resolveFilename = function(id) {
+    let ext = path.extname(id);
+    if (!ext) {
+        let exts = Object.keys(Module._extension);
+        return tryExtensions(id, exts)
+    }
 }
 Module._extension['.js'] = function(module, filename) {
     let content = fs.readFileSync(filename, 'utf8');
     module.compile(content, filename);
+}
+Module._extension['.json'] = function(module, filename) {
+    let content = fs.readFileSync(filename, 'utf8');
+    module.exports = JSON.parse(content);
 }
 
 Module.prototype.compile = function(content, filename){
@@ -56,11 +64,20 @@ function tryModuleLoad(module, id) {
         threw = false;
     }catch(e){
         delete Module._cache[id]
-        console.log('err ' + id)
+        console.log('err ' + ' ' + e)
     }
 }
-console.log('fist', req('a.js'))
-console.log('cache', req('a.js'))
+function tryExtensions(id, exts) {
+    for (let i = 0; i < exts.length; i++) {
+        try{
+            let temPath = id + exts[i]
+            fs.accessSync(temPath);
+            return temPath;
+        }catch(e) {}
+    }
+}
+console.log('fist', req('b'))
+console.log('cache', req('b'))
 // require -> module.require -> Module._load -> tryModuleLoad -> module.load -> 
 // 1. require(path) 方法 return module.require(path)
 // 2. module 是 Module实例
@@ -77,7 +94,7 @@ console.log('cache', req('a.js'))
 // 2. module 是 Module实例
 // 3. 调用Module._road(id)
 // 4. 检查传入名称 是不是存在父级 
-// 5. 然后 解析 文件名称 Module._resolveFilename 返回加载文件的 路径
+// 5. 然后 解析 文件名称 Module._resolveFilename 返回加载文件的 路径  tryExtensions
 // 6. var module = new Module(filename, parent);
 // {
 //     this.id = id;
