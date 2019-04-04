@@ -58,9 +58,10 @@ function tryModuleLoad(module, id) {
     try{
         module.load(id);
         threw = false;
-    }catch(e){
-        delete Module._cache[id]
-        console.log('err ' + ' ' + e)
+    }finally{
+        if (threw) {
+          delete Module._cache[id]
+        }
     }
 }
 function tryExtensions(id, exts) {
