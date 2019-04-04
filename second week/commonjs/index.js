@@ -9,7 +9,7 @@ function Module(id) {
 }
 
 Module._cache = Object.create(null);
-Module._extension = Object.create(null);
+Module._extensions = Object.create(null);
 Module.wrapper = ["(function(exports, require, module, __dirname, __filename){", "})"];
 // Module._pathCache[cacheKey]
 Module._load = function(id) { // 判断缓存中有没有 没有创建模块 尝试加载
@@ -27,15 +27,16 @@ Module._load = function(id) { // 判断缓存中有没有 没有创建模块 尝
 Module._resolveFilename = function(id) {
     let ext = path.extname(id);
     if (!ext) {
-        let exts = Object.keys(Module._extension);
+        let exts = Object.keys(Module._extensions);
         return tryExtensions(id, exts)
-    }
+    } 
+    return id;
 }
-Module._extension['.js'] = function(module, filename) {
+Module._extensions['.js'] = function(module, filename) {
     let content = fs.readFileSync(filename, 'utf8');
     module.compile(content, filename);
 }
-Module._extension['.json'] = function(module, filename) {
+Module._extensions['.json'] = function(module, filename) {
     let content = fs.readFileSync(filename, 'utf8');
     module.exports = JSON.parse(content);
 }
@@ -48,13 +49,8 @@ Module.prototype.compile = function(content, filename){
 }
 Module.prototype.load = function(id){
     var extension = path.extname(id) || '.js';
-    if (!Module._extension[extension]) extension = js; // 如果没有找到对应扩展名的编译方法 则按js处理
-    Module._extension[extension](this, id);
-}
-
-function req(id){ 
-    let currentPath = path.resolve(__dirname, id);
-    return Module._load(currentPath);
+    if (!Module._extensions[extension]) extension = js; // 如果没有找到对应扩展名的编译方法 则按js处理
+    Module._extensions[extension](this, id);
 }
 
 function tryModuleLoad(module, id) {
@@ -76,8 +72,21 @@ function tryExtensions(id, exts) {
         }catch(e) {}
     }
 }
-console.log('fist', req('b'))
-console.log('cache', req('b'))
+
+function req(id){ 
+    let currentPath = path.resolve(__dirname, id);
+    return Module._load(currentPath);
+}
+
+// console.log('fist', req('./b'))
+// console.log('cache', req('./b'))
+
+
+
+
+
+
+
 // require -> module.require -> Module._load -> tryModuleLoad -> module.load -> 
 // 1. require(path) 方法 return module.require(path)
 // 2. module 是 Module实例
@@ -120,11 +129,11 @@ console.log('cache', req('b'))
 
 // module.load
 // var extension = path.extname(filename) || '.js'; // 如果取不到扩展名 默认js
-//   if (!Module._extensions[extension]) extension = '.js'; // 加载不到 默认js
+//   if (!Module._extensionss[extension]) extension = '.js'; // 加载不到 默认js
 // Module.cache = Object.create(null); 不继承 object 原型链
-// Module._extensions = Object.create(null); 不继承 object 原型链
+// Module._extensionss = Object.create(null); 不继承 object 原型链
 // this.loaded = true
-// Module._extensions = {
+// Module._extensionss = {
 //     '.js': function(){
 //       module._compile(stripBOM(content), filename);
 // },
