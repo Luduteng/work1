@@ -58,6 +58,8 @@ function tryModuleLoad(module, id) {
     try{
         module.load(id);
         threw = false;
+    }catch(e) {
+        console.log('文件解析错误， 请检查文件！')
     }finally{
         if (threw) {
           delete Module._cache[id]
@@ -79,8 +81,8 @@ function req(id){
     return Module._load(currentPath);
 }
 
-// console.log('fist', req('./b'))
-// console.log('cache', req('./b'))
+// console.log('fist', req('./a'))
+// console.log('cache', req('./a'))
 
 
 
