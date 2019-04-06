@@ -1,3 +1,4 @@
+let b = require('./b.json')
 module.exports = {
-    a: 1
+    a: b
 }
